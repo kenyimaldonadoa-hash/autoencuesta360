@@ -20,11 +20,23 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Configurar Android SDK
+      - name: Preparar Android SDK
+        shell: bash
         run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMANAGER=$(find "$ANDROID_HOME" -type f -name sdkmanager | head -n 1)
+          if [ -z "$SDKMANAGER" ]; then
+            echo "No se encontro sdkmanager"
+            exit 1
+          fi
+          echo "SDKMANAGER=$SDKMANAGER" >> "$GITHUB_ENV"
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          yes | sdkmanager --licenses || true
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Instalar componentes Android
+        shell: bash
+        run: |
+          yes | "$SDKMANAGER" --licenses || true
+          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
